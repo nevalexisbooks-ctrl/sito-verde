@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IL SEGRETO DI VILLA VERDE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Belleza:wght@400;700&family=Cormorant+Garamond:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Belleza', serif;
+      background: #001704;
+      color: #e6efe6;
+      margin: 0; padding: 20px;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh;
+      background-image:
+        url('https://cdnjs.cloudflare.com/ajax/libs/svg-patterns/1.0.0/pattern-2.svg'),
+        radial-gradient(circle at center,#1E4F2B 0%,transparent 70%);
+      background-size:200px 200px,100% 100%;
+      background-repeat: repeat,no-repeat;
+    }
+    .container {
+      max-width:800px; width:100%; margin:0 auto;
+      padding:30px; position:relative;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .subtitle { text-align:center; color:#e6efe6; margin-bottom:3px; }
+    h1 {
+      text-align:center; color:#2E7D32; font-size:3.5em;
+      margin:3px 0 30px; text-shadow:2px 2px 4px rgba(0,0,0,0.5);
+    }
+    .enigma-grid {
+      display:grid; gap:15px;
+      grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+      width:100%; justify-items:center; margin-top:20px;
+    }
+    .enigma-button,
+    .submit-button,
+    .home-button,
+    .hint-button {
+      background:#e6efe6; color:#114016; border:none;
+      cursor:pointer; transition:all .3s; border-radius:8px;
+      font-family:'Belleza', serif; box-shadow:0 0 15px #2E7D32;
+    }
+    .enigma-button {
+      padding:15px; font-size:14px; width:100%; height:60px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .enigma-button:hover,
+    .submit-button:hover,
+    .home-button:hover { transform:translateY(-3px) scale(1.05); }
+    .enigma-page { display:none; text-align:center; }
+    .enigma-header { position:relative; padding-top:40px; }
+    .enigma-content {
+      display:flex; flex-direction:column; align-items:center;
+      gap:20px; width:100%;
+    }
+    .home-button {
+      position:absolute; top:10px; left:10px;
+      font-size:12px; padding:8px 12px; border-radius:5px; z-index:10;
+    }
+    input[type="text"] {
+      margin:20px 0; padding:12px; width:100%; max-width:280px;
+      font-size:13px; border:2px solid #2E7D32;
+      background:rgba(255,255,255,0.1); color:#e6efe6; border-radius:5px;
+    }
+    .submit-button { padding:14px 28px; font-size:18px; border-radius:5px; }
+    .hint-container {
+      margin-top:30px; display:flex;
+      flex-direction:column; align-items:center;
+    }
+    .hint-buttons {
+      display:flex; justify-content:center;
+      margin-bottom:15px; flex-wrap:wrap;
+    }
+    .hint-button {
+      padding:12px; font-size:16px;
+      margin:5px; border-radius:50%; width:40px; height:40px;
+      opacity:.5;
+    }
+    .hint-button.active { opacity:1; }
+    .hint-button.active:hover { transform:scale(1.1); }
+    .hint-text {
+      display:none; margin-top:15px;
+      background:rgba(46,125,50,0.1); padding:15px; border-radius:5px;
+      max-width:100%;
+    }
+    #result {
+      margin-top:20px; font-weight:bold; font-size:1.2em;
+      padding:12px; border-radius:5px; white-space:pre-line;
+      text-align:center;
+    }
+    .digit-hint {
+      font-size:.9em; margin:10px 0 15px;
+      color:#fff; opacity:.8; white-space:nowrap;
+    }
+    .shake { animation:shake .5s; }
+    @keyframes shake {
+      0%,100%{transform:translateX(0);}
+      25%{transform:translateX(-10px);}
+      50%{transform:translateX(10px);}
+      75%{transform:translateX(-10px);}
+    }
+    .solution-button-container {
+      margin-top:20px; text-align:center;
+    }
+    .solution-button {
+      background:none; border:none;
+      color:#e6efe6; font-size:14px;
+      opacity:.3; cursor:pointer; transition:opacity .3s;
+    }
+    .solution-button:hover { opacity:.6; }
+    @media(max-width:600px){
+      .container{padding:15px;}
+      h1{font-size:2em;margin-top:50px;}
+      .enigma-button{font-size:12px;height:50px;}
+      .submit-button{font-size:16px;padding:12px 24px;}
+      .home-button{font-size:10px;padding:6px 10px;}
+      .container>*{margin-bottom:10px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p class="subtitle">Escape the Page</p>
+    <h1>IL SEGRETO DI VILLA VERDE</h1>
+
+    <div id="home" class="enigma-grid"></div>
+
+    <div id="enigmaPage" class="enigma-page">
+      <button class="home-button" onclick="showHome()">❮</button>
+      <div class="enigma-header">
+        <h2 id="enigmaTitle"></h2>
+        <p id="digitHint" class="digit-hint"></p>
+      </div>
+
+      <div class="enigma-content">
+        <input type="text" id="answer" placeholder="Inserisci la riposta">
+        <button class="submit-button" onclick="checkAnswer()">INVIA</button>
+        <div id="result"></div>
+      </div>
+
+      <div class="hint-container">
+        <div id="hintButtons" class="hint-buttons"></div>
+        <div id="hintText" class="hint-text"></div>
+      </div>
+
+      <div class="solution-button-container">
+        <a id="solutionLink" href="#" target="_blank" rel="noopener noreferrer">
+          <button class="solution-button">Soluzione</button>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const enigmas = 26;
+    const correctAnswers = {
+      1:"8263",2:"947",3:"9053",4:"275",5:"42072",6:"182",
+      7:"2367",8:"3810",9:"851",10:"6835",11:"861",12:"972",
+      13:"3041",14:"59813",15:"2605",16:"523",17:"8963",
+      18:"241",19:"581",20:"58776",21:"2931",22:"0802",
+      23:"113",24:"492",25:"29875",26:"35274"
+    };
+
+    const solutionLinks = {
+      1:  "https://drive.google.com/file/d/1TVOQr64wn4M6pIM5xO34wxXpKo2q0T3d/view?usp=drive_link",
+      2:  "https://drive.google.com/file/d/1ohDPPQYVPGdbIAu06_L9btL6DgvQKPLQ/view?usp=drive_link",
+      3:  "https://drive.google.com/file/d/1yvrvTg_8R4wV3agMdOMdCFiHqVPL2JJ_/view?usp=drive_link",
+      4:  "https://drive.google.com/file/d/1nWjycYvqAeb3VrM1lCU41N9Uqlmf-h2V/view?usp=drive_link",
+      5:  "https://drive.google.com/file/d/1lMiD2rVUJnd3lAi9aBz03hKZzDef0tHO/view?usp=drive_link",
+      6:  "https://drive.google.com/file/d/1PgF3tA1TbycCrTihJHU11n39IYiPcPJm/view?usp=drive_link",
+      7:  "https://drive.google.com/file/d/1l7FFTzlEYuBFGBpbT1OirOaXaxIAYeJ7/view?usp=drive_link",
+      8:  "https://drive.google.com/file/d/1QMzrgnSO5QHXYuTcuiseA-5jNv68miPF/view?usp=drive_link",
+      9:  "https://drive.google.com/file/d/1QJe4XFVStbcj4umjRE7MjwVhGnINsqUo/view?usp=drive_link",
+      10: "https://drive.google.com/file/d/1jhlfFR1-3Kmt1qSaHVSexpA0odU2Ahun/view?usp=drive_link",
+      11: "https://drive.google.com/file/d/10IJkoA9yI83O-bV-HfXe_4yITkcHKf29/view?usp=drive_link",
+      12: "https://drive.google.com/file/d/1GmLIAxs17lk1_izU56kZ3Nm4zzA9x4XZ/view?usp=drive_link",
+      13: "https://drive.google.com/file/d/1K8r77b0fesA4vnF11VaHjlirzklv0KKb/view?usp=drive_link",
+      14: "https://drive.google.com/file/d/1hLvGJ88QpDCoLFJ2Q2MlU87rQsZ9Q_6G/view?usp=drive_link",
+      15: "https://drive.google.com/file/d/12qgVs4B0Hk9x7KvF36KN1mK-bi91TMyd/view?usp=drive_link",
+      16: "https://drive.google.com/file/d/1BGYqgpKY_haoCMrxh1ew0UJzJ3dKPbj4/view?usp=drive_link",
+      17: "https://drive.google.com/file/d/1CL-vWjI56HBeZ_xYc0kJ5579zaRVzOyd/view?usp=drive_link",
+      18: "https://drive.google.com/file/d/1qhE8Ptxjr-wmPl8s16mrdk9IR1ks01DW/view?usp=drive_link",
+      19: "https://drive.google.com/file/d/1ZXmhDG-hkwKYbywLMjj3ZzAXmnCSCIBA/view?usp=drive_link",
+      20: "https://drive.google.com/file/d/1VG85S_e5YrQ0SEO2hmEof-O05fxZk2de/view?usp=drive_link",
+      21: "https://drive.google.com/file/d/1y3p4XIcVwjWAMeivDF3GVRBM7xsT5VTg/view?usp=drive_link",
+      22: "https://drive.google.com/file/d/1KAvRh7kWDw695uHZCSKI192_DQgwOKir/view?usp=drive_link",
+      23: "https://drive.google.com/file/d/1DHJD5JlwgYoj0CqFnv39mQsE2Al_6mGs/view?usp=drive_link",
+      24: "https://drive.google.com/file/d/15DhJnf6FgVCuRZ8gB-bhXgnphCsBaFk1/view?usp=drive_link",
+      25: "https://drive.google.com/file/d/1yRgtVw6LyroSZ8JJuJMkF4Sdvmijhzj3/view?usp=drive_link",
+      26: "https://drive.google.com/file/d/1-uj3ery774bexieKdn5lxAY95p2WJ0Y9/view?usp=drive_link"
+    };
+
+    const hints = {
+      1: [
+        "Quest’edera è davvero curiosa, un'alternanza di foglie e fiori. Dove può nascondersi la soluzione?",
+        "Concentrati sui fiori, ma non su tutti quanti, ci sono 4 specie di fiori ben più importanti", 
+        "Quattro specie di fiori diversi si ripetono e sono posizionati in modo molto preciso… non sembrano forse dei numeri?"
+      ],
+      2: [
+        "Un orologio che segna le 8 in punto… ma non penso basti guardare le lancette per trovare la soluzione",
+        "Quest’orologio, al posto dei numeri ha altri orologi che segnano tutti ore diverse, forse possono aiutarti?",
+        "Concentrati sugli orologi indicati dalle lancette e, mi raccomando, si legge prima l’ora, poi i minuti e infine i secondi"
+      ],
+      3: [
+        "Una pagina molto interessante questa, dai bene un'occhiata a tutto quanto: linee, intere o tratteggiate, frecce girate in modo diverso, scritte molto in piccolo…",
+        "Le linee tratteggiate spesso indicano che bisogna tagliare, e poi? Come usare le altre linee?",
+        "Le frecce indicano come devi piegare le strisce che hai ottenuto, verso l'intero o verso l'esterno, piega formando un angolo di 90° gradi… quattro strisce come le cifre della soluzione!"
+      ],
+      4: [
+        "Una libreria con tanti libri, per trovare la soluzione devi leggere i vari dorsi… si ma quali?",
+        "Alcuni libri hanno dei nomi completi, altri invece solo numeri o lettere, concentrati su quest’ultimi",
+        "Ci sono numeri, lettere in maiuscolo e in minuscolo… guarda i libri legati da una catena sulla pagina di sinistra e poi collega gli elementi dello stesso “gruppo” nell’ordine corretto, alfabetico o numerico!"
+      ],
+      5: [
+        "Sembra molto interessante questa figura, ogni linea ha come estremi un numero e una lettera, non possono essere casuali",
+        "Prova a guardare bene le lettere a disposizione, quali parole puoi formare? Dai un'occhiata al numero di cifre della soluzione, tante parole dovrai scartarle in automatico! Ps. presta attenzione alle lettere che si ripetono",
+        "La parola non è scelta a caso, forse Qualcuno ti sta suggerendo la risposta ma tu non ti sei accorto? Puoi trovare quell’asterisco anche da qualche altra parte?"
+      ],
+      6: [
+        "Libro e scarabeo sono scritti in modo davvero particolare, cosa vorrà dire?",
+        "Litio, Bromo, Ossigeno… non ti dicono nulla? A quali numeri sono collegati? No, non serve cercare su internet, Tomas ha già pensato a tutto!",
+        "Cosa fare ora con tutti questi numeri atomici? Beh, guarda bene lo sfondo della pagina sinistra... ti sta dicendo cosa fare!"
+      ],
+      7: [
+        "Questa poesia non può essere casuale, sicuramente c'è qualche numero nascosto",
+        "Non sembra ci siano numeri classici tra le parole, forse devi cercare altri tipi di numeri? Ps. non ti sembra una poesia un po' strana? Alcune parole sembrano proprio a caso e tutte le prime lettere sono in maiuscolo…",
+        "Ogni parola inizia con lettere ben precise: C M V I L … come i numeri romani! Guarda bene cosa suggerisce lo sfondo per capire come usarli. Ps. Se non ti ricordi i numeri romani Tomas ti può aiutare!"
+      ],
+      8: [
+        "Questo lucchetto richiede 4 cifre, in questi scaffali però ci sono troppi barattoli… devi capire quali guardare",
+        "Alcuni semi hanno nomi che suonano come numeri… ma solo alcuni li contengono realmente, come la Cimetta TREmolis…",
+        "Fai attenzione alle maiuscole, ti possono aiutare, ad esempio: come mai la U di MirellU Novales è scritta così?"
+      ],
+      9: [
+        "Un groviglio di rami interessante, ma sembra non portare da nessuna parte… sarà possibile?", 
+        "La vera fine di questi cavi non è sulla pagina che stai osservando, ma ti assicuro che l'hai toccata diverse volte!", 
+        "Il groviglio finisce sul retro della copertina! Ora devi solo seguire le strade e metterle in ordine!"
+      ],
+      10: [
+        "Non ci sono tanti indizi da dare per questo enigma… devi solo aprire bene gli occhi",
+        "Concentrati su una pianta per mensola…",
+        "Basta solo un po’ di osservazione e noterai che su ciascuna delle quattro mensole c’è una pianta dalla forma molto particolare che ricorda un numero."
+      ],
+      11: [
+        "Qui ci sono dei più e dei meno… ma non sembra normale matematica… Qual è il risultato di queste bizzarre operazioni?",
+        "Ormai ti sarà chiaro che stiamo parlando di colori: una fragola rossa a cui il blu viene aggiunto darà viola… no? Mentre una foglia verde a cui viene sottratto il giallo? Che risultato darà? Ora devi solo capire come collegare ogni colore al numero corretto… forse stai cercando nel posto sbagliato.",
+        "Per trovare i tre numeri del codice devi trovare del viola, del blu e del rosso, forse puoi leggere una poesia molto interessante, ma attenzione, non fidarti dei numeri che leggi, fai attenzione alle parole."
+      ],
+      12: [
+        "Sembra non ci siano numeri in queste pagine… forse devi cercarli altrove.",
+        "Questi cerchi non ti ricordano qualcosa di molto famigliare? Scommetto che hai già capito cosa sono quelle sfere… beh, ora devi capire quali sono quelle da utilizzare… e soprattutto come utilizzarle! Forse quelle piante sulla sinistra possono aiutare",
+        "Ora devi solo capire quali pianeti corrispondo a quelle tre piante, tranquillo, nel taccuino di Tomas trovi tutto quanto, anche l'ordine dei pianeti!"
+      ],
+      13: [
+        "Questi strani simboli devono per forza significare qualcosa…",
+        "Quando non si trovano risposte, a volte, basta cambiare prospettiva.",
+        "Se stai ancora tenendo il libro appoggiato al tavolo, è arrivato il momento di sollevarlo e guardarlo da un'altra angolazione"
+      ],
+      14: [
+        "Un muro interessante, non trovi? Leggi bene il bigliettino e, mi raccomando, non concentrarti solo su questa pagina.",
+        "Cambiano e mutano… rivelano risposte… hai visto che ci sono due muri? Quali fiori mutano? E, soprattutto, come fanno a rivelare risposte? Forse devi farli sparire…",
+        "Tagliando/bucando i fiori che cambiano da un muro all'altro, vedrai apparire dei numeri!"
+      ],
+      15: [
+        "Sono decisamente troppi numeri per essere il codice che cerchi, devi capire come usarli.",
+        "La maggior parte dei numeri si ripete più volte, deve esserci una ragione. Magari qualche pianta particolare ti può aiutare!",
+        "Nel taccuino di Tomas ho visto una foto di una pianta-telefono, i suoi tasti sembrano essere interessanti."
+      ],
+      16: [
+        "Un labirinto… non penso ci sia tanto da fare se non provare ad uscire",
+        "Fai attenzione alle curve… ma se non hai proprio voglia di risolverlo leggi il terzo indizio!",
+        "Non ti va di uscire dal labirinto eh… beh, allora prova a guardare nell'angolo in alto a destra… la soluzione è più visibile del previsto!"
+      ],
+      17: [
+        "Questi simboli sembrano non avere senso, sembra quasi manchi qualcosa…",
+        "Mancano chiaramente due parti, per formare le quattro cifre della soluzione, ma dove trovarle?",
+        "Hai notato la pagina precedente e la successiva? Prova a piegarle e vedrai comparire la soluzione!"
+      ],
+      18: [
+        "Sarebbe troppo facile se la soluzione fosse la somma di tutti questi numeri eh? Ci hai davvero provato? Se riuscissi a capire a cosa si riferiscono queste cifre, sapresti cosa cercare…",
+        "Hai mai sentito parlare di numeri atomici? Beh, prova a sfogliare il taccuino di Tomas e capirai che queste cifre sono in realtà… dei colori!",
+        "Ormai dovresti aver capito di quali tre colori stiamo parlando, blu, oro e viola, ma dove trovi dei colori in un libro in bianco e nero? Trovati? Ecco, ora devi solo contare!"
+      ],
+      19: [
+        "Questo biglietto mi sembra abbastanza chiaro: devi piantare le nove piante nello schema del giardino lì sotto, le piante nei riquadri cerchiati ti daranno la soluzione…",
+        "Ti stai chiedendo come piantarle, vero? Sicuramente non vanno piantate a caso, ad esempio posso dirti che la Bellaria Fragrans andrà piantata nell’angolo in alto a sinistra e che la Irisbella non potrà andare vicino alla Echinata. Dove trovare queste informazioni?",
+        "Nel taccuino di Tomas ci sono tutte le indicazioni delle 9 piante, dove amano stare, vicino a quali piante e lontano da quali altre. Poni attenzioni a nomi, famiglie e presenza o meno di fiori, ma se vuoi un piccolo aiuto extra posiziona la Acerbatus Silvanis nell’angolo in basso a destra"
+      ],
+      20: [
+        "Un altro bigliettino, ma decisamente meno chiaro! Osserva bene tutto quanto, le maiuscole non sono a caso.",
+        "Hai notato che la parola VENTO è tutta in maiuscolo? Cosa vorrà dire quanto VENTO soffia?",
+        "Osserva i nomi delle piante e conta quante volte si ripetono le lettere V E N T O nei vari nomi… nectar Vita, Viridis lux, noVos spina, orchis Volants, terreno Vitis… le V sono 5, e le altre lettere?"
+      ],
+      21: [
+        "Beh, il biglietto sembra molto chiaro: parla di un puzzle e di cifre che si allineano… mi sa che un bel paio di forbici ti tornerà utile.",
+        "I pezzi del puzzle però sono davvero particolari, ti serviranno… ma come unirli? Ps: rileggi la poesia!", 
+        "La poesia parla di un puzzle apparentemente innocuo ma ingannevole, cosa puoi trovare di apparentemente innocuo ma ingannevole in questo libro? Sì, devi tornare praticamente ad inizio libro! Ah, mi raccomando, guarda solo le cifre che si allineano!"
+      ],
+      22: [
+        "Quante cose in queste pagine, numeri, strane piante e stelle… bisognerebbe capire come collegare il tutto no?", 
+        "Sicuramente il taccuino di Tomas è un buon aiuto, ma sono costellazioni così grandi, si rischia di sbagliare numero… forse devi collegare una stella particolare…  Magari qualcuno ha fatto qualche errore!", 
+        "Se osservi attentamente le costellazioni disegnate da Tomas nel suo taccuino noterai che in ogni costellazione c’è una stella mancante. Ora torna alla pagina dell’enigma, proprio quella stella sarà da collegare alla pianta corrispondente e, mi raccomando, una bella riga dritta."
+      ],
+      23: [
+        "Non sembra un enigma difficile questo, si tratta solo di contare oggetti e di fare delle operazioni, no? Il numero di sedie è abbastanza facile, puoi contarlo a mano nelle illustrazioni o puoi leggere il taccuino di Tomas, sembra non amasse le sedie… per porte e finestre? Fai attenzione!", 
+        "Le porte sono davvero facili da contare: basta usare la cartina della villa, ogni spazietto bianco su di un muro è una porta e no, per salire dalla stanza dei rampicanti all’archivio non c’era una porta.", 
+        "Se hai bisogno anche del terzo indizio vuol dire che le finestre ti hanno dato problemi... Leggendo le descrizioni e guardando le immagini, troviamo due finestre in biblioteca, una nella sala degli innesti, due nella stanza esotica… e in camera da letto? Quante finestre ci saranno lì? L’immagine della villa ti aiuterà a capirlo!"
+      ],
+      24: [
+        "Anche questo biglietto sembra molto chiaro: bisogna calcolare delle distanze… ma mi sa che devi usare molte più di una pagina.", 
+        "La prima distanza da misurare si trova nella stanza degli innesti, ma fai attenzione a dove puntato le frecce, non sono casuali, dalla rotella della prima pianta all”orecchio” della seconda pianta. Per la seconda misurazione devi andare in biblioteca, dei puntini bianchi ti aiuteranno, mentre per la terza, devi tornare fino all’ingresso.", 
+        "Ok, fin qui tutto chiaro, ma come si fa senza un righello? Hai usato un righello qualsiasi e non ha funzionato? Forse Tomas ne ha uno da prestarti! Guarda bene tutto il biglietto!"
+      ],
+      25: [
+        "Un bel reticolo di lettere e numeri e un post-it attaccato al computer, sicuramente servirà qualcos’altro affinché lettere e numeri “spariscano” o “vengano coperti” come dice il post-it, no?", 
+        "Prendi la cartina della villa e taglia ogni stanza, ora il gioco è semplice: con la camera delle spore copri tutte le caselle contenenti il numero 4, con la stanza delle spezie copri tutte le caselle contenenti la lettera M e così via… quali caselle rimangono scoperte?", 
+        "Se hai coperto tutto correttamente, ti saranno rimaste le caselle C u O R e, ma non sono numeri! Come trovare la soluzione? Dai, dovresti già esserci passato… non ricordi SCaRaBeo?"
+      ],
+      26: [
+        "Una pagina davvero singolare per questo ultimo enigma, guardala con attenzione per non farti sfuggire nulla, simboli, frecce, cerchi quasi invisibili…", 
+        "Forse quei cerchi sono la chiave per trovare la soluzione… questo è l'ultimo enigma, puoi permetterti di rompere anche la copertina del taccuino!", 
+        "Hai trovato i due cerchi sulla copertina del taccuino? Posizionali correttamente e parti dalle frecce, cinque numeri appariranno e ti riveleranno la soluzione."
+      ]
+    };
+
+    let currentEnigma = 0, currentHint = 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.history.replaceState({ page: "home" }, "", "");
+      const homeDiv = document.getElementById('home');
+      for (let i = 1; i <= enigmas; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = `ENIGMA ${i}`;
+        btn.className = 'enigma-button';
+        btn.onclick = () => showEnigma(i);
+        homeDiv.appendChild(btn);
+      }
+    });
+
+    function showEnigma(n) {
+      currentEnigma = n;
+      document.getElementById('home').style.display = 'none';
+      document.getElementById('enigmaPage').style.display = 'block';
+      document.getElementById('enigmaTitle').textContent = `ENIGMA ${n}`;
+      document.getElementById('digitHint').textContent =
+        `La risposta è un numero a ${correctAnswers[n].length} cifre`;
+      document.getElementById('answer').value = '';
+      document.getElementById('result').textContent = '';
+      resetHints();
+      document.getElementById('solutionLink').href = solutionLinks[n];
+      window.scrollTo(0, 0);
+      window.history.pushState({ page: "enigma", enigma: n }, "", `#enigma${n}`);
+    }
+
+    function showHome() {
+      document.getElementById('home').style.display = 'grid';
+      document.getElementById('enigmaPage').style.display = 'none';
+      window.history.replaceState({ page: "home" }, "", "");
+    }
+
+    window.addEventListener("popstate", e => {
+      if (!e.state || e.state.page === "home") showHome();
+    });
+
+    function checkAnswer() {
+      const ans = document.getElementById('answer').value.trim();
+      const rd  = document.getElementById('result');
+      if (ans === correctAnswers[currentEnigma]) {
+        if (currentEnigma === 26) {
+          rd.innerHTML = `
+            <p style="color:#75b87d; margin-bottom:20px;">
+              Corretto!<br>Hai risolto l'enigma!<br>Procedi con la lettura della storia!
+            </p>
+            <p style="color:#ffffff;">
+              Hai completato l'avventura a Villa Verde, ora non ti rimane che leggere le ultime pagine per uscire dalla villa, ma prima lascia che ti ringrazi!<br><br>
+              Grazie mille per aver comprato il nostro libro e per aver giocato con noi.<br><br>
+              Se questi enigmi ti sono piaciuti, non dimenticare di lasciare una sincera recensione su Amazon, noi ci rivedremo presto...
+            </p>`;
+        } else {
+          rd.innerHTML = `
+            <p style="color:#75b87d;">
+              Corretto!<br>Hai risolto l'enigma!<br>Procedi con la lettura della storia!
+            </p>`;
+        }
+      } else {
+        rd.textContent = 'Risposta errata. Riprova!';
+        rd.style.color = '#b83838';
+      }
+      rd.classList.remove('shake');
+      void rd.offsetWidth;
+      rd.classList.add('shake');
+    }
+
+    function resetHints() {
+      currentHint = 0;
+      const hb = document.getElementById('hintButtons');
+      hb.innerHTML = '';
+      (hints[currentEnigma] || []).forEach((_, i) => {
+        const b = document.createElement('button');
+        b.textContent = '💡';
+        b.className = `hint-button${i===0?' active':''}`;
+        b.onclick = () => showHint(i+1);
+        hb.appendChild(b);
+      });
+      document.getElementById('hintText').style.display = 'none';
+    }
+
+    function showHint(n) {
+      if (n <= currentHint+1) {
+        const ht = document.getElementById('hintText');
+        ht.innerHTML = hints[currentEnigma][n-1];
+        ht.style.display = 'block';
+        if (n > currentHint) {
+          currentHint = n;
+          if (n < hints[currentEnigma].length) {
+            document.querySelector(`.hint-button:nth-child(${n+1})`)
+                    .classList.add('active');
+          }
+        }
+      }
+    }
+
+    window.showHome    = showHome;
+    window.checkAnswer = checkAnswer;
+    window.showHint    = showHint;
+  </script>
+  <!--Start of Tawk.to Script-->
+  <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+      var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+      s1.async=true;
+      s1.src='https://embed.tawk.to/67b838ca74a6b419071d08ba/1ikjprlts';
+      s1.charset='UTF-8';
+      s1.setAttribute('crossorigin','*');
+      s0.parentNode.insertBefore(s1,s0);
+    })();
+  </script>
+  <!--End of Tawk.to Script-->
+</body>
+</html>
+
+</body>
+</html>
